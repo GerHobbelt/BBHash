@@ -18,6 +18,10 @@
 #include <memory> // for make_shared
 
 
+#ifndef NO_POPCNT
+#include <popcntintrin.h>
+#endif
+
 namespace boomphf {
 
 ////////////////////////////////////////////////////////////////
@@ -25,25 +29,23 @@ namespace boomphf {
 #pragma mark utils
 ////////////////////////////////////////////////////////////////
 
-	inline unsigned int popcount_32(unsigned int x)
-	{
-		unsigned int m1 = 0x55555555;
-		unsigned int m2 = 0x33333333;
-		unsigned int m4 = 0x0f0f0f0f;
-		unsigned int h01 = 0x01010101;
-		x -= (x >> 1) & m1;               /* put count of each 2 bits into those 2 bits */
-		x = (x & m2) + ((x >> 2) & m2);   /* put count of each 4 bits in */
-		x = (x + (x >> 4)) & m4;          /* put count of each 8 bits in partie droite  4bit piece*/
-		return (x * h01) >> 24;           /* returns left 8 bits of x + (x<<8) + ... */
-	}
-
-
 	inline unsigned int popcount_64(uint64_t x)
 	{
-		unsigned int low = x & 0xffffffff ;
-		unsigned int high = ( x >> 32LL) & 0xffffffff ;
-
-		return (popcount_32(low) + popcount_32(high));
+#ifndef NO_POPCNT
+    return static_cast<unsigned int>(_mm_popcnt_u64(x));
+#else
+    constexpr uint64_t m1 = 0x5555555555555555ULL;
+    constexpr uint64_t m2 = 0x3333333333333333ULL;
+    constexpr uint64_t m4 = 0x0f0f0f0f0f0f0f0fULL;
+    constexpr uint64_t m8 = 0x00ff00ff00ff00ffULL;
+    constexpr uint64_t m16 = 0x0000ffff0000ffffULL;
+    constexpr uint64_t m32 = 0x00000000ffffffffULL;
+    constexpr uint64_t h01 = 0x0101010101010101ULL;
+    x -= (x >> 1) & m1;
+    x = (x & m2) + ((x >> 2) & m2);
+    x = (x + (x >> 4)) & m4;
+    return (x * h01) >> 56;
+#endif
 	}
 
 

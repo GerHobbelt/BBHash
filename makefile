@@ -1,6 +1,6 @@
 # CC=/usr/bin/g++
 CXX ?= g++
-CFLAGS = -O3 -std=c++11 -lpthread
+CFLAGS = -O3 -std=c++11 -lpthread -mpopcnt
 EXEC=Bootest example example_custom_hash example_custom_hash_strings BootestFile
 all: $(EXEC)
 
