@@ -1316,8 +1316,6 @@ we need this 2-functors scheme because HashFunctors won't work with unordered_ma
 
 		//compute level and returns hash of last level reached
 		uint64_t getLevel(hash_pair_t & bbhash, const elem_t &val, int * res_level, int maxlevel = 100, int minlevel =0)
-		//uint64_t getLevel(hash_pair_t & bbhash, elem_t val,int * res_level, int maxlevel = 100, int minlevel =0)
-
 		{
 			int level = 0;
 			uint64_t hash_raw=0;
