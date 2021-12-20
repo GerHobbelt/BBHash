@@ -13,11 +13,14 @@
 #include <unordered_map>
 #include <vector>
 #include <assert.h>
+#if !defined(_MSC_VER)
 #include <sys/time.h>
+#endif
 #include <string.h>
 #include <memory> // for make_shared
+#if !defined(_MSC_VER)
 #include <unistd.h>
-
+#endif
 
 #ifndef NO_POPCNT
 #include <popcntintrin.h>
