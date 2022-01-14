@@ -22,6 +22,16 @@
 #include <unistd.h>
 #endif
 
+#if defined(_MSC_VER)
+#include <pthread.h>
+#include <uint128_t.h>
+
+typedef uint128_t __uint128_t;
+
+#define NO_POPCNT
+#endif
+
+
 #ifndef NO_POPCNT
 #include <popcntintrin.h>
 #endif
@@ -29,9 +39,9 @@
 namespace boomphf {
 
 	
-	inline u_int64_t printPt( pthread_t pt) {
+	inline uint64_t printPt( pthread_t pt) {
 	  unsigned char *ptc = (unsigned char*)(void*)(&pt);
-		u_int64_t res =0;
+		uint64_t res =0;
 	  for (size_t i=0; i<sizeof(pt); i++) {
 		  res+= (unsigned)(ptc[i]);
 	  }
@@ -45,7 +55,7 @@ namespace boomphf {
 ////////////////////////////////////////////////////////////////
 
 	
-	// iterator from disk file of u_int64_t with buffered read,   todo template
+	// iterator from disk file of uint64_t with buffered read,   todo template
 	template <typename basetype>
 	class bfile_iterator : public std::iterator<std::forward_iterator_tag, basetype>{
 	public:
