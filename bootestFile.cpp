@@ -43,9 +43,9 @@ typedef boomphf::mphf<  std::string, Custom_string_Hasher  > boophf_t;
 int main (int argc, char* argv[]){
 
 	//PARAMETERS
-	u_int64_t nelem = 0;
-	uint nthreads = 1;
-	uint gamma=2;
+	uint64_t nelem = 0;
+	unsigned int nthreads = 1;
+	unsigned int gamma=2;
 
 	if(argc !=4 ){
 		printf("Usage :\n");
@@ -62,12 +62,13 @@ int main (int argc, char* argv[]){
 	uint64_t ii, jj;
 
 	boophf_t * bphf = NULL;
-	double t_begin,t_end; struct timeval timet;
+	double t_begin,t_end;
+	plf::nanotimer timet;
 
 
 	printf("Construct a BooPHF with  %lli elements  \n",nelem);
 
-	gettimeofday(&timet, NULL); t_begin = timet.tv_sec +(timet.tv_usec/1000000.0);
+	timet.start();
 
 	std::vector<std::string> data;
 	std::string line;
@@ -81,20 +82,18 @@ int main (int argc, char* argv[]){
 	//build the mphf
 	bphf = new boomphf::mphf<std::string,Custom_string_Hasher>(nelem,data,nthreads,gamma);
 
-	gettimeofday(&timet, NULL); t_end = timet.tv_sec +(timet.tv_usec/1000000.0);
-	double elapsed = t_end - t_begin;
+	double elapsed = timet.get_elapsed_sec();
 
 
 	printf("BooPHF constructed perfect hash for %llu keys in %.2fs\n", nelem,elapsed);
 	printf("boophf  bits/elem : %f\n",(float) (bphf->totalBitSize())/nelem);
-	gettimeofday(&timet, NULL); t_begin = timet.tv_sec +(timet.tv_usec/1000000.0);
+	timet.start();
 
 	//query mphf like this
-	for (u_int64_t i = 0; i < nelem; i++){
+	for (uint64_t i = 0; i < nelem; i++){
 		uint64_t  idx = bphf->lookup(data[i]);
 	}
-	gettimeofday(&timet, NULL); t_end = timet.tv_sec +(timet.tv_usec/1000000.0);
-	double elapsed2 = t_end - t_begin;
+	double elapsed2 = timet.get_elapsed_sec();
 
 	printf("Query of %llu key  in %.2fs\n", nelem,elapsed2);
 

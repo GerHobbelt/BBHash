@@ -1,8 +1,9 @@
 [![Build Status](https://travis-ci.org/rizkg/BBHash.svg?branch=master)](https://travis-ci.org/rizkg/BBHash)
 
 # BBHash
+
 BBHash is a simple library for building minimal perfect hash function.
-It is designed to handle large scale datasets. The function is just a little bit larger than other state-of-the-art libraries, it takes approximately 3 bits / elements (compared to 2.62 bits/elem for the emphf lib), but construction is faster and does not require additional memory. 
+It is designed to handle large scale datasets. The function is just a little bit larger than other state-of-the-art libraries, it takes approximately 3 bits / element (compared to 2.62 bits/elem for the emphf lib), but construction is faster and does not require additional memory. 
 
 It is easy to include in other projects (just include a single .h file) and has no dependencies.
 
@@ -28,6 +29,7 @@ A. Limasset, G. Rizk, R. Chikhi, P. Peterlongo, _Fast and Scalable Minimal Perfe
 ```
 
 # Usage
+
 Here is a simple example showing how to build and query a mphf with input keys in a std::vector<u_int64_t> . BBHash is mainly designed for de-duplicated input. Keys can be read from a disk file, or from some user-defined iterator.
 
      #include "BooPHF.h"
@@ -45,6 +47,7 @@ Here is a simple example showing how to build and query a mphf with input keys i
      uint64_t  idx = bphf->lookup(input_keys[0]);
 
 # Types supported
+
 The master branch works with Plain Old Data types only (POD). To work with other types, use the "alltypes" branch (it runs slighlty slower). The alltypes branch includes a sample code with strings. The "internal_hash" branch allows to work with types that do not support copy or assignment operators, at the expense of using 128bits/key in I/O operations regardless of the actual key size. Thus, if your keys are 64 bits integers, "internal_hash" will do twice more I/Os. But if your keys are longer than 128 bits, then "internal_hash" branch will be faster than the master branch.
 
 # How to run test
@@ -86,6 +89,7 @@ If you query a key that is not in the input set of keys, then one of the two fol
 This is actually the behavior of  any minimal perfect hash function, not just BBHash. It is just how they work. Need to increase the probability of situation 1 happening? Increase the `gamma` parameter (at the expense of memory usage), or store a signature of your key at the position given by the index. Or to completely prevent situation 2, store the whole key at its index, but this somewhat defeats the purpose of having a minimal perfect hash.
 
 # Authors
+
 Guillaume Rizk, Antoine Limasset, Rayan Chikhi
 
 guillaume.rizk@algorizk.com

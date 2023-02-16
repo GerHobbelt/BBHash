@@ -1,5 +1,6 @@
 #include "BooPHF.h"
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -57,7 +58,7 @@ void gen_random(char *s, const int len) {
 int main (int argc, char* argv[]){
 	
 	//PARAMETERS
-	u_int64_t nelem = 1000000;
+	uint64_t nelem = 1000000;
 	uint nthreads = 1;
 
 	if(argc !=3 ){
@@ -81,7 +82,7 @@ int main (int argc, char* argv[]){
 
 	//string lolstr;
 	//ifstream inputfile("StringFile.txt",ios::in);
-	for (u_int64_t i = 0; i < nelem; i++){
+	for (uint64_t i = 0; i < nelem; i++){
 		//RANDOM STRINGS
 		 gen_random(tempchar,string_size);
 		 data.push_back((string)tempchar);
@@ -96,12 +97,13 @@ int main (int argc, char* argv[]){
 	// at this point, array data contains a set of nelem random unique keys
 	
 	boophf_t * bphf = NULL;
-	double t_begin,t_end; struct timeval timet;
+	double t_begin,t_end;
+	plf::nanotimer timet;
 	
 	
 	printf("Construct a BooPHF with  %lli elements  \n",nelem);
 	
-	gettimeofday(&timet, NULL); t_begin = timet.tv_sec +(timet.tv_usec/1000000.0);
+	timet.start();
 	
 	// mphf takes as input a c++ range. A std::vector is already a c++ range
 	
@@ -111,20 +113,18 @@ int main (int argc, char* argv[]){
 	//build the mphf
 	bphf = new boomphf::mphf<std::string,Custom_string_Hasher>(nelem,data,nthreads,gammaFactor);
 	
-	gettimeofday(&timet, NULL); t_end = timet.tv_sec +(timet.tv_usec/1000000.0);
-	double elapsed = t_end - t_begin;
+	double elapsed = timet.get_elapsed_sec();
 	
 	
 	printf("BooPHF constructed perfect hash for %llu keys in %.2fs\n", nelem,elapsed);
 	printf("boophf  bits/elem : %f\n",(float) (bphf->totalBitSize())/nelem);
-	gettimeofday(&timet, NULL); t_begin = timet.tv_sec +(timet.tv_usec/1000000.0);
+	timet.start();
 	
 	//query mphf like this
-	for (u_int64_t i = 0; i < nelem; i++){
+	for (uint64_t i = 0; i < nelem; i++){
 		uint64_t  idx = bphf->lookup(data[i]);
 	}
-	gettimeofday(&timet, NULL); t_end = timet.tv_sec +(timet.tv_usec/1000000.0);
-	double elapsed2 = t_end - t_begin;
+	double elapsed2 = timet.get_elapsed_sec();
 
 	printf("Query of %llu key  in %.2fs\n", nelem,elapsed2);
 	

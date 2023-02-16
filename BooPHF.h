@@ -13,20 +13,45 @@
 #include <unordered_map>
 #include <vector>
 #include <assert.h>
-#if !defined(_MSC_VER)
-#include <sys/time.h>
-#endif
 #include <string.h>
 #include <memory> // for make_shared
 #if !defined(_MSC_VER)
 #include <unistd.h>
 #endif
 
+#include <atomic>
+
+#include "plf_nanotimer.hpp"
+
 #if defined(_MSC_VER)
 #include <pthread.h>
 #include <uint128_t.h>
 
 typedef uint128_t __uint128_t;
+
+// https://gcc.gnu.org/onlinedocs/gcc-5.3.0/gcc/_005f_005fsync-Builtins.html
+//
+// GCC: 6.50 Legacy __sync Built-in Functions for Atomic Memory Access
+//
+// These built-in functions perform the operation suggested by the name, and returns the value that had previously been in memory.
+
+template<typename type>
+type __sync_fetch_and_add (type *ptr, type value)
+{
+	return std::atomic_fetch_add<type>(ptr, value);
+}
+
+template<typename type>
+type __sync_fetch_and_and (type *ptr, type value)
+{
+	return std::atomic_fetch_and<type>(ptr, value);
+}
+
+template<typename type>
+type __sync_fetch_and_or (type *ptr, type value)
+{
+	return std::atomic_fetch_or<type>(ptr, value);
+}
 
 #define NO_POPCNT
 #endif
@@ -208,8 +233,7 @@ namespace boomphf {
 	{
 	public:
 		int timer_mode;
-		struct timeval timestamp;
-		double heure_debut, heure_actuelle ;
+		plf::nanotimer timestamp;
 		std::string   message;
 
 		uint64_t done;
@@ -226,8 +250,8 @@ namespace boomphf {
 		{
 			_nthreads = nthreads;
 			message = std::string(msg);
-			gettimeofday(&timestamp, NULL);
-			heure_debut = timestamp.tv_sec +(timestamp.tv_usec/1000000.0);
+
+			timestamp.start();
 
 			//fprintf(stderr,"| %-*s |\n",98,msg);
 
@@ -283,9 +307,7 @@ namespace boomphf {
 			{
 				if(timer_mode)
 				{
-					gettimeofday(&timestamp, NULL);
-					heure_actuelle = timestamp.tv_sec +(timestamp.tv_usec/1000000.0);
-					double elapsed = heure_actuelle - heure_debut;
+					double elapsed = timestamp.get_elapsed_sec();
 					double speed = done / elapsed;
 					double rem = (todo-done) / speed;
 					if(done>todo) rem=0;
@@ -318,13 +340,9 @@ namespace boomphf {
 			{
 				if(timer_mode)
 				{
-					struct timeval timet;
-					double now;
-					gettimeofday(&timet, NULL);
-					now = timet.tv_sec +(timet.tv_usec/1000000.0);
 					uint64_t total_done  = 0;
 					for (int ii=0; ii<_nthreads;ii++) total_done += (done_threaded[ii] );
-					double elapsed = now - heure_debut;
+					double elapsed = timestamp.get_elapsed_sec();
 					double speed = total_done / elapsed;
 					double rem = (todo-total_done) / speed;
 					if(total_done > todo) rem =0;
@@ -697,7 +715,7 @@ we need this 2-functors scheme because HashFunctors won't work with unordered_ma
 			}
 			printf("\n");
 
-			printf("rank array : size %lu \n",_ranks.size());
+			printf("rank array : size %zu\n",_ranks.size());
 			for (uint64_t ii = 0; ii< _ranks.size(); ii++)
 			{
 				printf("%llu :  %lli,  ",(long long unsigned int)ii,(long long int)_ranks[ii]);
@@ -1139,8 +1157,7 @@ we need this 2-functors scheme because HashFunctors won't work with unordered_ma
 								
 								}
 								
-									myWriteBuff[writebuff++] = val;
-					
+								myWriteBuff[writebuff++] = val;
 							}
 							
 							
