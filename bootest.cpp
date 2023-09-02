@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
-#include <sys/types.h>
 #include <random>
 #include <algorithm>
 #include <climits>
@@ -13,6 +12,7 @@
 #include <assert.h>
 #include <thread>
 #include <math.h>
+#include <inttypes.h>
 
 
 
@@ -370,7 +370,7 @@ int check_mphf_correctness (phf_t * bphf, Range const& input_range){
 			else
 			{
 				//printf("collision for val %lli : \n",mphf_value);
-				printf("collision for %llu  mphf_value %llu\n",val,mphf_value);
+				printf("collision for %" PRIu64 "  mphf_value %" PRIu64 "\n",val,mphf_value);
 
 				nb_collision_detected++;
 			}
@@ -386,7 +386,7 @@ int check_mphf_correctness (phf_t * bphf, Range const& input_range){
 		}
 		else
 		{
-			printf("!!! problem, %llu collisions detected; %llu out of range !!!\n",nb_collision_detected,range_problems);
+			printf("!!! problem, %" PRIu64 " collisions detected; %" PRIu64 " out of range !!!\n",nb_collision_detected,range_problems);
 			return 1;
 
 		}
@@ -429,7 +429,7 @@ void bench_mphf_lookup (phf_t * bphf, Range const& input_range){
 			}
 		}
 	}
-	printf("BBhash bench lookups average %.2f ns +- stddev  %.2f %%   (fingerprint %llu)  \n", 1000.0*stats.mean(),stats.relative_stddev(),dumb);
+	printf("BBhash bench lookups average %.2f ns +- stddev  %.2f %%   (fingerprint %" PRIu64 ")  \n", 1000.0*stats.mean(),stats.relative_stddev(),dumb);
 
 }
 
@@ -543,7 +543,8 @@ int main (int argc, char* argv[]){
 			if (data[ii] != data[jj])
 				data[++jj] = data[ii];
 		}
-		printf("found %lli duplicated items  \n",nelem+rab-(jj + 1) );
+		printf("found %" PRIu64 " duplicated items  \n",nelem+rab-(jj + 1) );
+
 	}
 	else{
 		if(!on_the_fly)
@@ -659,7 +660,7 @@ int main (int argc, char* argv[]){
 
 		double elapsed = timet.get_elapsed_sec();
 
-		printf("BooPHF constructed perfect hash for %llu keys in %.2fs\n", nelem,elapsed);
+		printf("BooPHF constructed perfect hash for %" PRIu64 " keys in %.2fs\n", nelem,elapsed);
 		// cin.get();
 
 		if(check_correctness){
@@ -675,7 +676,7 @@ int main (int argc, char* argv[]){
 				uint64_t mphf_value = MPHFs[hash].lookup(current2)+  nb_elem_in_previous_buckets [hash];
 				if(mphf_value>=nelem){
 					range_problems++;
-					printf("there is %llu problems \n", range_problems);
+					printf("there is %" PRIu64 " problems \n", range_problems);
 				}
 				if(check_table[mphf_value]==0)
 				{
@@ -688,8 +689,8 @@ int main (int argc, char* argv[]){
 				}
 				current2 += step2;
 			}
-			printf("there is %llu problems\n", range_problems);
-			printf("there is %llu coll\n", nb_collision_detected);
+			printf("there is %" PRIu64 " problems\n", range_problems);
+			printf("there is %" PRIu64 " coll\n", nb_collision_detected);
 
 			end = clock();
 			//printf("BooPHF %llu lookups in  %.2fs,  approx  %.2f ns per lookup \n", nelem, (double)(end - begin) / CLOCKS_PER_SEC,  ((double)(end - begin) / CLOCKS_PER_SEC)*1000000000/nelem);
@@ -736,7 +737,7 @@ int main (int argc, char* argv[]){
 					}
 				}
 			}
-			printf("BBhash buckets bench lookups average %.2f ns +- stddev  %.2f %%   (fingerprint %llu)  \n", 1000.0*stats.mean(),stats.relative_stddev(),dumb);
+			printf("BBhash buckets bench lookups average %.2f ns +- stddev  %.2f %%   (fingerprint %" PRIu64 ")  \n", 1000.0*stats.mean(),stats.relative_stddev(),dumb);
 			
 			///
 		}
@@ -758,7 +759,7 @@ int main (int argc, char* argv[]){
 	plf::nanotimer timet;
 
 	if(!load_mphf){
-		printf("Construct a BooPHF with  %lli elements  \n",nelem);
+		printf("Construct a BooPHF with  %" PRIu64 " elements  \n",nelem);
 		///create the boophf
 
 		timet.start();
@@ -783,7 +784,7 @@ int main (int argc, char* argv[]){
 		double elapsed = timet.get_elapsed_sec();
 
 
-		printf("BooPHF constructed perfect hash for %llu keys in %.2fs\n", nelem,elapsed);
+		printf("BooPHF constructed perfect hash for %" PRIu64 " keys in %.2fs\n", nelem,elapsed);
 		printf("boophf  bits/elem : %f\n",(float) (bphf->totalBitSize())/nelem);
 
 	}
@@ -791,7 +792,7 @@ int main (int argc, char* argv[]){
 		//assumes the mphf was saved before, reload it
 		bphf = new boomphf::mphf<uint64_t,hasher_t>();
 
-		printf("Loading a BooPHF with  %lli elements  \n",nelem);
+		printf("Loading a BooPHF with  %" PRIu64 " elements  \n",nelem);
 
 		timet.start();
 
@@ -800,7 +801,7 @@ int main (int argc, char* argv[]){
 
 		double elapsed = timet.get_elapsed_sec();
 
-		printf("BooPHF re-loaded perfect hash for %llu keys in %.2fs\n", nelem,elapsed);
+		printf("BooPHF re-loaded perfect hash for %" PRIu64 " keys in %.2fs\n", nelem,elapsed);
 		printf("boophf  bits/elem : %f\n",(float) (bphf->totalBitSize())/nelem);
 	}
 
@@ -895,7 +896,7 @@ int main (int argc, char* argv[]){
 		}
 		double elapsed = get_time_usecs() - tick;
 
-		printf("query %i elem  out of set  FP rate %.2f   nb issues %llu    lookup %.2f  ns \n",nrandom, nb_fp/(float)nrandom,nb_out_of_range
+		printf("query %i elem  out of set  FP rate %.2f   nb issues %" PRIu64 "    lookup %.2f  ns \n",nrandom, nb_fp/(float)nrandom,nb_out_of_range
 			   ,1000.0*elapsed/(double)nrandom );
 	}
 	
