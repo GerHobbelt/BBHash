@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <iostream>
 #include <math.h>
+#include <thread>
+#include <filesystem>
 
 #include <array>
 #include <unordered_map>
@@ -206,11 +208,13 @@ namespace boomphf {
 		FILE * _is;
 	};
 
-	
-	
-	
+
+#ifdef NOBUILTINPOPCOUNT
 	inline unsigned int popcount_64(uint64_t x)
-	{
+            {
+
+#ifdef NOBUILTINPOPCOUNT
+
 #ifndef NO_POPCNT
     return static_cast<unsigned int>(_mm_popcnt_u64(x));
 #else
@@ -226,9 +230,15 @@ namespace boomphf {
     x = (x + (x >> 4)) & m4;
     return (x * h01) >> 56;
 #endif
-	}
 
+#else
 
+                __asm__("popcnt %0, %0" : "+r" (x));
+                return x;
+
+#endif
+            }
+	
 	///// progress bar
 	class Progress
 	{
@@ -924,6 +934,8 @@ we need this 2-functors scheme because HashFunctors won't work with unordered_ma
 		_gamma(gamma), _hash_domain(size_t(ceil(double(n) * gamma))), _nelem(n), _num_thread(num_thread), _percent_elem_loaded_for_fastMode (perc_elem_loaded), _withprogress(progress)
 		{
 			if(n ==0) return;
+
+			if (std::filesystem::exists(_sharedMemoryFolder)) _folder = _sharedMemoryFolder;
 			
 			_fastmode = false;
 			
@@ -1288,6 +1300,7 @@ we need this 2-functors scheme because HashFunctors won't work with unordered_ma
 			pthread_mutex_init(&_mutex, NULL);
 
 			_pid = getpid() + printPt(pthread_self()) ;// + pthread_self();
+			_tid = std::hash<std::thread::id>{}(std::this_thread::get_id());
 			//printf("pt self %llu  pid %i \n",printPt(pthread_self()),_pid);
 
 			_cptTotalProcessed=0;
@@ -1404,13 +1417,13 @@ we need this 2-functors scheme because HashFunctors won't work with unordered_ma
 			//printf("---process level %i   wr %i fast %i ---\n",i,_writeEachLevel,_fastmode);
 			
 			char fname_old[1000];
-			sprintf(fname_old,"temp_p%i_level_%i",_pid,i-2);
+			sprintf(fname_old,"%s/temp_p%i_t%i_level_%i",_folder,_pid,_tid,i-2);
 			
 			char fname_curr[1000];
-			sprintf(fname_curr,"temp_p%i_level_%i",_pid,i);
+			sprintf(fname_curr,"%s/temp_p%i_t%i_level_%i",_folder,_pid,_tid,i);
 			
 			char fname_prev[1000];
-			sprintf(fname_prev,"temp_p%i_level_%i",_pid,i-1);
+			sprintf(fname_prev,"%s/temp_p%i_t%i_level_%i",_folder,_pid,_tid,i-1);
 			
 			if(_writeEachLevel)
 			{
@@ -1530,6 +1543,9 @@ we need this 2-functors scheme because HashFunctors won't work with unordered_ma
 		int _nb_levels;
         MultiHasher_t _hasher;
 		bitVector * _tempBitset;
+		const char* _sharedMemoryFolder = "/dev/shm";
+		const char* _temporaryFolder = "/tmp";
+		const char* _folder = _temporaryFolder;
 
 		double _gamma;
 		uint64_t _hash_domain;
@@ -1559,6 +1575,7 @@ we need this 2-functors scheme because HashFunctors won't work with unordered_ma
 		bool _writeEachLevel;
 		FILE * _currlevelFile;
 		int _pid;
+		int _tid;
 	public:
 		pthread_mutex_t _mutex;
 	};
